@@ -1,0 +1,15 @@
+Système de vote specification
+
+1. Un voteur à le choix de s'enregistrer ou de voter directement si il à déjà été enregistré 
+
+2. Un voteur s'enregistre sur notre machine soit en scannant sa carte ou en entrant ces informations manuellement sur un clavier. Un écran lcd est utilize pour affiché les informations du voteur.
+
+3. Un voteur utilise son emprunte digitale afin de finalizer son enregistrement comme un voteur et afin de voter une fois enregistré
+
+4. Un voteur vote en choissisant un candidats parmis plusieurs. Les choix sont affiché sur un écran LCD et les boutons pour voter sont fonctionnel au candidat seulement lorsqu'il scan son emprunte digital. (Scan main droite et vote avec main gauche)
+
+5. Un voteur qui scan son emprunte est le seul qui est physiquement capable de choisir un candidat. Si la main d'un autre individue touche un bouton celui ci ne sera pas fonctionnel
+
+6. Notre base de donnée est composé d'une table de voteur et d'une table de vote.
+
+7. Les tables sont publiques, mais encrypté d'une façons que l'empruinte digital du voteur est encrypté, chaque vote n'est pas retracable à leur voteur et une fois un voteur à voté il ne peut pas revoter à nouveau
