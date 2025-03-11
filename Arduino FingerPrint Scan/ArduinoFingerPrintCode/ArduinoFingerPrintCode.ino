@@ -117,14 +117,15 @@ void getFingerprintTemplateHex(uint16_t id) {
     Serial.println(" bytes received. Converting to hex...");
 
     Serial.println("Fingerprint Template in HEX:");
-    delay(400)
+    delay(400);
+    
     for (int i = 0; i < 512; i++) {
         printHex(buffer[i]);
         if ((i + 1) % 16 == 0) Serial.println();
         else Serial.print(" ");
     }
 
-    delay(400)
+    delay(400);
 
     Serial.println("\nDone.");
 }
