@@ -1,39 +1,47 @@
 import re
 import serial
-import schedule
 import time
+import csv
 
-def reading_fingerprint_data():
-    arduino = serial.Serial('com8',9600)
-    print("Connection to arduino established")
-    start_capturing_data = False
-    hexFingerprintBuffer = ""
+DEBUG_FINGERPRINT_HEX = "AABBCCDDEEFF00112233445566778899AABBCCDDEEFF00112233445566778899"
+
+def read_fingerprint_data():
+    arduino = serial.Serial('com8', 9600)
+    print("Connected to Arduino")
+    start_capturing_fingerprint = False
+    start_capturing_choice = False
+    choice = ''
+    hex_fingerprint = ""
+
+    time.sleep(2)
+    arduino.write(bytes("1",  'utf-8'))
+
     while True:
-        arduino_data = arduino.readline()
+        arduino_data = arduino.readline().decode("utf-8").strip()
+        print(arduino_data)
+        if "Press" in arduino_data:
+            start_capturing_choice = True
 
-        decoded_values = str(arduino_data[0:len(arduino_data)].decode("utf-8"))
-        print(decoded_values)
-        list_values = decoded_values.split('x')
+        if "Place your finger to enroll in Slot 1" in arduino_data:
+            start_capturing_choice = False
 
-        if "Done" in decoded_values:
-            print("Debug: Done")
-            start_capturing_data = False
+
+        if "Done" in arduino_data:
+            start_capturing_fingerprint = False
             arduino.close()
             break
 
-        if start_capturing_data:
-            hexFingerprintBuffer += decoded_values
+        if start_capturing_fingerprint:
+            hex_fingerprint += arduino_data
+        
+        if start_capturing_choice:
+            choice = arduino_data
 
-        if "Fingerprint Template in HEX:" in decoded_values:
-            print("Debug: Start")
-            start_capturing_data = True
-
-        time.sleep(0.3)
+        if "Fingerprint Template in HEX:" in arduino_data:
+            start_capturing_fingerprint = True
+            
     
-    return hexFingerprintBuffer
-    
-
-
+    return [hex_fingerprint, choice]
 
 def clean_hex_string(hex_string):
     """Remove spaces and newlines from hex data."""
@@ -55,24 +63,45 @@ def similarity_percentage(bin1, bin2):
     return ((total_bits - distance) / total_bits) * 100
 
 
+def check_fingerprint_match(hex_fingerprint):
+    """Check scanned fingerprint against stored fingerprints in CSV."""
+    scanned_binary = hex_to_binary(hex_fingerprint)
+    
+    with open('fingerprints.csv', newline='') as file:
+        reader = csv.reader(file)
+        for row in reader:
+            if len(row) < 2:
+                continue
+            stored_id, stored_hex = row[0], row[1]
+            stored_binary = hex_to_binary(stored_hex)
+            similarity = similarity_percentage(scanned_binary, stored_binary)
+            
+            print(f"Comparing with ID {stored_id}: {similarity:.2f}% similarity")
+            
+            if similarity > 90:  # Threshold for match
+                print(f"Match found! User ID: {stored_id}")
+                return stored_id
+    
+    print("No match found.")
+    return None
+
+def voting_process():
+    arduino = serial.Serial('com8', 9600)
+    print("Connected to Arduino")
+
+    time.sleep(2)
+    arduino.write(bytes("2",  'utf-8'))
+
+    while True:
+        arduino_data = arduino.readline().decode("utf-8").strip()
+        print(arduino_data)
 
 
-#reading data from arduino
-
-print("HI we're comparing two fingerprint to calculate the similarity between them: ")
-
-print("Fingerprint number 1: ")
-hex1 = reading_fingerprint_data()
-
-print("Fingerprint number 2: ")
-hex2 = reading_fingerprint_data()
 
 
-# Convert HEX to Binary
-binary1 = hex_to_binary(hex1)
-binary2 = hex_to_binary(hex2)
+def main():
+    voting_process()
+    
 
-# Compute Similarity
-similarity = similarity_percentage(binary1, binary2)
-
-print(f"Fingerprint Similarity: {similarity:.2f}%")
+if __name__ == "__main__":
+    main()
